@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # Servicio de Punto Fijo
+  punto-fijo-service:
+    build: ./Metodos/punto-fijo-service
+    container_name: punto-fijo-service
+    ports:
+      - "8001:8001"
+    networks:
+      - metodos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Servicio de Bisección
+  biseccion-service:
+    build: ./Metodos/biseccion-service
+    container_name: biseccion-service
+    ports:
+      - "8002:8002"
+    networks:
+      - metodos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Servicio de Newton-Raphson
+  newton-raphson-service:
+    build: ./Metodos/newton-raphson-service
+    container_name: newton-raphson-service
+    ports:
+      - "8003:8003"
+    networks:
+      - metodos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Servicio de Secante
+  secante-service:
+    build: ./Metodos/secante-service
+    container_name: secante-service
+    ports:
+      - "8004:8004"
+    networks:
+      - metodos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Servicio de Jacobi
+  jacobi-service:
+    build: ./Metodos/jacobi-service
+    container_name: jacobi-service
+    ports:
+      - "8005:8005"
+    networks:
+      - metodos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Servicio de Gauss-Seidel
+  gauss-seidel-service:
+    build: ./Metodos/gauss-seidel-service
+    container_name: gauss-seidel-service
+    ports:
+      - "8006:8006"
+    networks:
+      - metodos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - punto-fijo-service
+      - biseccion-service
+      - newton-raphson-service
+      - secante-service
+      - jacobi-service
+      - gauss-seidel-service
+    networks:
+      - metodos-network
+    environment:
+      - PUNTO_FIJO_SERVICE_URL=http://punto-fijo-service:8001
+      - BISECCION_SERVICE_URL=http://biseccion-service:8002
+      - NEWTON_RAPHSON_SERVICE_URL=http://newton-raphson-service:8003
+      - SECANTE_SERVICE_URL=http://secante-service:8004
+      - JACOBI_SERVICE_URL=http://jacobi-service:8005
+      - GAUSS_SEIDEL_SERVICE_URL=http://gauss-seidel-service:8006
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - metodos-network
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080/api
+
+networks:
+  metodos-network:
+    driver: bridge

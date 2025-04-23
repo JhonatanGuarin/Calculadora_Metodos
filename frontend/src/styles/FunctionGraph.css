@@ -1,0 +1,13 @@
+.function-graph-container {
+    width: 100%;
+    margin: 1rem 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .geogebra-container {
+    width: 100%;
+    height: 500px;
+    background-color: #f9f9f9;
+  }

@@ -1,0 +1,598 @@
+/* Metodo.css - Estilos unificados para todos los métodos numéricos */
+
+:root {
+    /* Colores principales */
+    --primary-color: #3498db;
+    --primary-dark: #2980b9;
+    --accent-color: #e83e8c;
+    --accent-dark: #d83177;
+    --secondary-color: #2c3e50;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --text-light: #bdc3c7;
+    --text-muted: #6c757d;
+    
+    /* Colores de estado */
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #f39c12;
+    
+    /* Colores de fondo */
+    --bg-light: #f8f9fa;
+    --bg-white: #ffffff;
+    
+    /* Espaciado */
+    --spacing-xs: 0.5rem;   /* 8px */
+    --spacing-sm: 0.75rem;  /* 12px */
+    --spacing-md: 1rem;     /* 16px */
+    --spacing-lg: 1.5rem;   /* 24px */
+    --spacing-xl: 2rem;     /* 32px */
+    
+    /* Bordes y sombras */
+    --border-radius: 8px;
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Contenedor principal para todos los métodos */
+  .method-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+  
+  /* Título del método */
+  .method-title {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    color: var(--secondary-color);
+    font-size: 2.5rem;
+  }
+  
+  /* Pestañas de navegación */
+  .method-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-xl);
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .tab-button {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    margin: 0 var(--spacing-xs);
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+    font-size: 1rem;
+  }
+  
+  .tab-button:hover {
+    color: var(--primary-color);
+  }
+  
+  .tab-button.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+    font-weight: bold;
+  }
+  
+  .tab-button:disabled {
+    color: var(--text-light);
+    cursor: not-allowed;
+  }
+  
+  .tab-content {
+    margin-top: var(--spacing-xl);
+  }
+  
+  /* Tarjetas para diferentes secciones */
+  .input-card, .results-card, .graph-card, .theory-card {
+    border: none;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  /* Información de la ecuación */
+  .equation-info {
+    background-color: var(--bg-light);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-md);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  
+  /* Estructura de formulario */
+  .form-row {
+    display: flex;
+    gap: var(--spacing-lg);
+  }
+  
+  .half-width {
+    flex: 1;
+  }
+  
+  /* Botón de envío */
+  .submit-button {
+    width: 100%;
+    padding: var(--spacing-sm);
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .submit-button:hover:not(:disabled) {
+    background-color: var(--accent-dark);
+    border-color: var(--accent-dark);
+  }
+  
+  .submit-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  /* Títulos de secciones */
+  .results-title, .graph-title, .theory-title {
+    color: var(--secondary-color);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+    font-size: 1.5rem;
+  }
+  
+  /* Resumen de resultados */
+  .result-summary {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+  
+  .result-item {
+    text-align: center;
+    padding: var(--spacing-md);
+    background-color: var(--bg-light);
+    border-radius: var(--border-radius);
+    min-width: 200px;
+    margin: var(--spacing-xs);
+  }
+  
+  .result-item h4 {
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-muted);
+    font-size: 1rem;
+  }
+  
+  .result-value {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  /* Colores de texto para estados */
+  .text-success {
+    color: var(--success-color) !important;
+  }
+  
+  .text-danger {
+    color: var(--danger-color) !important;
+  }
+  
+  .text-warning {
+    color: var(--warning-color) !important;
+  }
+  
+  /* Mensaje de resultado */
+  .result-message {
+    background-color: var(--bg-light);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .result-message h4 {
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-xs);
+    font-size: 1rem;
+  }
+  
+  /* Título de iteraciones */
+  .iterations-title {
+    margin: var(--spacing-xl) 0 var(--spacing-md);
+    color: var(--secondary-color);
+    font-size: 1.2rem;
+  }
+  
+  /* Tabla responsiva */
+  .table-responsive {
+    overflow-x: auto;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  /* Leyenda del gráfico */
+  .graph-legend {
+    margin-top: var(--spacing-lg);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: var(--spacing-md);
+    background-color: var(--bg-light);
+    border-radius: var(--border-radius);
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    margin: var(--spacing-xs) var(--spacing-md);
+  }
+  
+  .color-box {
+    width: 18px;
+    height: 18px;
+    margin-right: var(--spacing-xs);
+    border-radius: 3px;
+  }
+  
+  .color-box.red {
+    background-color: #ff0000;
+  }
+  
+  .color-box.blue {
+    background-color: #0000ff;
+  }
+  
+  .color-box.green {
+    background-color: #008000;
+  }
+  
+  /* Sección de teoría */
+  .theory-section {
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .theory-section h4 {
+    color: var(--secondary-color);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid #eee;
+    padding-bottom: var(--spacing-xs);
+    font-size: 1.2rem;
+  }
+  
+  .theory-section p, .theory-section ul, .theory-section ol {
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  
+  .theory-section ul, .theory-section ol {
+    padding-left: var(--spacing-lg);
+  }
+  
+  .theory-section li {
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  /* Estilos para el teclado matemático */
+  .math-keyboard {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+  
+  .keyboard-tab {
+    background-color: white;
+    border: none;
+    border-radius: 0;
+    padding: var(--spacing-sm) var(--spacing-xs);
+    font-size: 14px;
+  }
+  
+  .active-tab {
+    background-color: var(--accent-color);
+    color: white;
+  }
+  
+  .keyboard-key {
+    background-color: white;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: var(--spacing-sm) var(--spacing-xs);
+    font-size: 16px;
+  }
+  
+  .keyboard-action {
+    background-color: var(--bg-light);
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: var(--spacing-sm);
+    font-size: 14px;
+    color: var(--secondary-color);
+  }
+  
+  .math-keyboard .keyboard-row:first-child {
+    background-color: var(--bg-light);
+    border-bottom: 1px solid #eee;
+  }
+  
+  .math-keyboard .keyboard-row:first-child .keyboard-tab:first-child {
+    background-color: var(--accent-color);
+    color: white;
+  }
+  
+  .math-keyboard .keyboard-row:last-child {
+    background-color: var(--bg-light);
+    border-top: 1px solid #eee;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  
+  .math-keyboard .keyboard-row:last-child .keyboard-action:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .math-keyboard .keyboard-row:last-child .keyboard-action:last-child::after {
+    content: "▼";
+    font-size: 12px;
+  }
+  
+  /* Media queries para responsividad */
+  @media (max-width: 768px) {
+    .method-tabs {
+      flex-wrap: wrap;
+    }
+    
+    .tab-button {
+      margin-bottom: var(--spacing-xs);
+    }
+    
+    .form-row {
+      flex-direction: column;
+      gap: 0;
+    }
+    
+    .result-summary {
+      flex-direction: column;
+    }
+    
+    .result-item {
+      width: 100%;
+      margin: var(--spacing-xs) 0;
+    }
+    
+    .geogebra-container {
+      height: 400px;
+    }
+  }
+
+  .matrix-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .matrix-row {
+    display: flex;
+    gap: var(--spacing-xs);
+    justify-content: center;
+  }
+  
+  .matrix-cell {
+    width: 70px;
+    text-align: center;
+    padding: var(--spacing-xs);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .vector-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    justify-content: center;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .vector-cell {
+    width: 70px;
+    text-align: center;
+    padding: var(--spacing-xs);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  /* Estilos para la solución del sistema */
+  .solution-title {
+    margin: var(--spacing-xl) 0 var(--spacing-md);
+    color: var(--secondary-color);
+    font-size: 1.2rem;
+    text-align: center;
+  }
+  
+  .solution-vector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin: var(--spacing-md) 0 var(--spacing-xl);
+  }
+  
+  .solution-item {
+    background-color: var(--bg-light);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .solution-variable {
+    font-weight: bold;
+    margin-right: var(--spacing-xs);
+    color: var(--accent-color);
+  }
+  
+  .solution-value {
+    font-family: monospace;
+    font-size: 1.1rem;
+  }
+  
+  /* Estilos para ejemplos predefinidos */
+  .examples-section {
+    background-color: var(--bg-light);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+    border-left: 3px solid var(--primary-color);
+  }
+  
+  .example-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+  }
+  
+  /* Estilos para fórmulas matemáticas */
+  .formula {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 1.1em;
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    background-color: var(--bg-light);
+    border-left: 3px solid var(--primary-color);
+    color: var(--text-primary);
+    overflow-x: auto;
+  }
+  
+  /* Estilos para detalles de convergencia */
+  .convergence-details {
+    background-color: var(--bg-light);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-top: var(--spacing-lg);
+  }
+  
+  .convergence-details h4 {
+    color: var(--secondary-color);
+    margin-bottom: var(--spacing-sm);
+    font-size: 1.1rem;
+  }
+  
+  .convergence-details ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .convergence-details li {
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .convergence-details li:last-child {
+    border-bottom: none;
+  }
+  
+  /* Adaptaciones responsivas para matrices */
+  @media (max-width: 768px) {
+    .matrix-row {
+      flex-wrap: wrap;
+    }
+    
+    .matrix-cell, .vector-cell {
+      width: 60px;
+      font-size: 0.9rem;
+    }
+    
+    .solution-vector {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .solution-item {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .example-buttons {
+      flex-direction: column;
+    }
+    
+    .example-buttons button {
+      width: 100%;
+    }
+  }
+
+  /* Estilos para el modal de error */
+.error-modal .modal-content {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.error-modal-header {
+  background-color: #fff1f0;
+  border-bottom: 1px solid #ffccc7;
+  padding: 15px 20px;
+}
+
+.error-modal-title {
+  color: #ff4d4f;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.error-icon {
+  color: #ff4d4f;
+  margin-right: 10px;
+}
+
+.error-close-btn {
+  color: #999;
+  transition: color 0.2s;
+  padding: 0;
+}
+
+.error-close-btn:hover {
+  color: #ff4d4f;
+}
+
+.error-modal-body {
+  padding: 20px;
+}
+
+.error-message {
+  margin: 0;
+  color: #434343;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.error-modal-footer {
+  background-color: #fff7e6;
+  border-top: 1px solid #ffe7ba;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-tip {
+  margin: 0;
+  color: #fa8c16;
+  font-size: 13px;
+  font-style: italic;
+}
