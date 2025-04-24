@@ -2,21 +2,8 @@ from typing import Dict, List, Tuple, Any, Callable
 import numpy as np
 import math
 
-def biseccion(f: Callable, a: float, b: float, tol: float = 1e-6, max_iter: int = 100) -> Dict[str, Any]:
-    """
-    Implementa el método de bisección para encontrar raíces de una función.
-
-    Args:
-        f: Función a la que se le busca la raíz
-        a: Límite inferior del intervalo
-        b: Límite superior del intervalo
-        tol: Tolerancia para el criterio de parada
-        max_iter: Número máximo de iteraciones
-
-    Returns:
-        Un diccionario con los resultados del método
-    """
-    # Validar los parámetros de entrada
+def _validate_numeric_input(a, b, tol, max_iter):
+    """Función auxiliar para validar los parámetros de entrada"""
     if not isinstance(a, (int, float)):
         raise ValueError("El límite inferior 'a' debe ser un número")
 
@@ -38,23 +25,38 @@ def biseccion(f: Callable, a: float, b: float, tol: float = 1e-6, max_iter: int 
     if not isinstance(max_iter, int) or max_iter <= 0:
         raise ValueError("El número máximo de iteraciones debe ser un entero positivo")
 
+def _safe_function_evaluation(f, x, point_name):
+    """Función auxiliar para evaluar una función de manera segura"""
+    try:
+        result = f(x)
+    except Exception as e:
+        raise ValueError(f"Error al evaluar la función en {point_name}={x}: {str(e)}")
+
+    if math.isnan(result) or math.isinf(result):
+        raise ValueError(f"La función evaluada en {point_name}={x} da como resultado un valor no válido: {result}")
+
+    return result
+
+def biseccion(f: Callable, a: float, b: float, tol: float = 1e-6, max_iter: int = 100) -> Dict[str, Any]:
+    """
+    Implementa el método de bisección para encontrar raíces de una función.
+
+    Args:
+        f: Función a la que se le busca la raíz
+        a: Límite inferior del intervalo
+        b: Límite superior del intervalo
+        tol: Tolerancia para el criterio de parada
+        max_iter: Número máximo de iteraciones
+
+    Returns:
+        Un diccionario con los resultados del método
+    """
+    # Validar los parámetros de entrada
+    _validate_numeric_input(a, b, tol, max_iter)
+
     # Evaluar la función en los extremos del intervalo
-    try:
-        fa = f(a)
-    except Exception as e:
-        raise ValueError(f"Error al evaluar la función en a={a}: {str(e)}")
-
-    try:
-        fb = f(b)
-    except Exception as e:
-        raise ValueError(f"Error al evaluar la función en b={b}: {str(e)}")
-
-    # Verificar si los valores son números válidos
-    if math.isnan(fa) or math.isinf(fa):
-        raise ValueError(f"La función evaluada en a={a} da como resultado un valor no válido: {fa}")
-
-    if math.isnan(fb) or math.isinf(fb):
-        raise ValueError(f"La función evaluada en b={b} da como resultado un valor no válido: {fb}")
+    fa = _safe_function_evaluation(f, a, "a")
+    fb = _safe_function_evaluation(f, b, "b")
 
     # Verificar que f(a) y f(b) tengan signos opuestos
     if fa * fb >= 0:
@@ -90,14 +92,7 @@ def biseccion(f: Callable, a: float, b: float, tol: float = 1e-6, max_iter: int 
         c = (a + b) / 2
 
         # Evaluar la función en el punto medio
-        try:
-            fc = f(c)
-        except Exception as e:
-            raise ValueError(f"Error al evaluar la función en el punto medio c={c}: {str(e)}")
-
-        # Verificar si el valor es un número válido
-        if math.isnan(fc) or math.isinf(fc):
-            raise ValueError(f"La función evaluada en c={c} da como resultado un valor no válido: {fc}")
+        fc = _safe_function_evaluation(f, c, "c")
 
         # Calcular el error porcentual si es posible
         error_porcentual = None
@@ -128,7 +123,7 @@ def biseccion(f: Callable, a: float, b: float, tol: float = 1e-6, max_iter: int 
                 "raiz": float(c),
                 "iteraciones": i + 1,
                 "pasos": pasos,
-                "mensaje": f"Método convergióen {i+1} iteraciones."
+                "mensaje": f"Método convergió en {i+1} iteraciones."
             }
 
         # Actualizar el intervalo [a, b]

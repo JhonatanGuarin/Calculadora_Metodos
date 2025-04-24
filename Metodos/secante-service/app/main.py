@@ -15,6 +15,11 @@ def read_root():
 @app.post("/solve", response_model=SecantResponse)
 def solve_with_secante(request: SecantRequest):
     try:
+        # Validar la ecuación
+        if not request.equation or request.equation.isspace():
+            raise HTTPException(status_code=400, detail="La ecuación no puede estar vacía")
+
+        # Ejecutar el método de la secante
         result = secante_method(
             request.equation,
             request.x0,
@@ -23,9 +28,11 @@ def solve_with_secante(request: SecantRequest):
             request.tolerance
         )
 
+        # Verificar si se encontró una raíz
         if result["root"] is None:
             raise HTTPException(status_code=400, detail=result["message"])
 
+        # Construir y devolver la respuesta
         return SecantResponse(
             root=result["root"],
             iterations=result["iterations"],
@@ -39,4 +46,5 @@ def solve_with_secante(request: SecantRequest):
         # Re-lanzar excepciones HTTP
         raise
     except Exception as e:
+        # Capturar cualquier otra excepción
         raise HTTPException(status_code=400, detail=str(e))
