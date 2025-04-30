@@ -45,6 +45,13 @@ const HomePage = () => {
       description: 'Método iterativo mejorado para sistemas de ecuaciones lineales',
       icon: '🧮',
       available: true
+    },
+    {
+      id: 'trapecio',
+      name: 'Trapecio',
+      description: 'Método de integración numérica basado en aproximación lineal',
+      icon: '∫',
+      available: true
     }
   ];
 

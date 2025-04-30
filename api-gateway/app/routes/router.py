@@ -213,6 +213,44 @@ async def gauss_seidel_route(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
+
+@router.post("/metodos/trapecio")
+async def trapecio_route(request: Request):
+    """
+    Ruta para el método de Trapecio.
+    Reenvía la solicitud al microservicio correspondiente.
+    """
+    try:
+        # Obtener el cuerpo de la solicitud
+        body = await request.json()
+
+        # Reenviar la solicitud al microservicio de Trapecio
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{settings.trapecio_service_url}/integrate",  # Nota: endpoint es 'integrate', no 'solve'
+                json=body,
+                timeout=30.0
+            )
+
+            # Devolver la respuesta del microservicio
+            return response.json()
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=503, detail=f"Error de servicio: {str(e)}")
+    except httpx.HTTPStatusError as e:
+        # Capturar errores HTTP del microservicio y reenviarlos
+        error_detail = "Error desconocido"
+        try:
+            error_response = e.response.json()
+            if "detail" in error_response:
+                error_detail = error_response["detail"]
+        except:
+            error_detail = str(e)
+
+        raise HTTPException(status_code=e.response.status_code, detail=error_detail)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
+
 @router.get("/health")
 async def health_check():
     """
@@ -292,5 +330,18 @@ async def health_check():
             )
         except:
             health_status["services"]["gauss_seidel"] = "unreachable"
+
+        try:
+            # Verificar el servicio de Trapecio
+            response = await client.get(
+                f"{settings.trapecio_service_url}/",
+                timeout=5.0
+            )
+            health_status["services"]["trapecio"] = (
+                "healthy" if response.status_code == 200 else "unhealthy"
+            )
+        except:
+            health_status["services"]["trapecio"] = "unreachable"
+
 
     return health_status

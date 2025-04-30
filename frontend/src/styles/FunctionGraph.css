@@ -11,3 +11,46 @@
     height: 500px;
     background-color: #f9f9f9;
   }
+
+  /* Estilos para la leyenda del gráfico */
+.graph-legend {
+  margin-top: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.color-box {
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  border-radius: 3px;
+}
+
+.color-box.red {
+  background-color: #ff0000;
+}
+
+.color-box.blue {
+  background-color: rgba(0, 128, 255, 0.7);
+}
+
+.integration-area {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+.result-highlight {
+  font-weight: bold;
+  color: #007bff;
+  font-size: 1.1em;
+  margin-top: 10px;
+}

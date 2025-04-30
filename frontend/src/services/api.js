@@ -80,6 +80,18 @@ export const metodosGaussSeidel = {
   }
 };
 
+export const metodosTrapecio = {
+  integrate: async (data) => {
+    try {
+      const response = await api.post('/metodos/trapecio', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error en la solicitud de Trapecio:', error);
+      throw error;
+    }
+  }
+};
+
 export const health = {
   check: async () => {
     try {

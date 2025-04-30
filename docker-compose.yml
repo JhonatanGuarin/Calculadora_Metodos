@@ -91,6 +91,21 @@ services:
       retries: 3
       start_period: 10s
 
+  # Servicio de Trapecio
+  trapecio-service:
+    build: ./Metodos/trapecio-service
+    container_name: trapecio-service
+    ports:
+      - "8007:8007" 
+    networks:
+      - metodos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   # API Gateway
   api-gateway:
     build: ./api-gateway
@@ -104,6 +119,7 @@ services:
       - secante-service
       - jacobi-service
       - gauss-seidel-service
+      - trapecio-service  # Añadir dependencia del servicio de Trapecio
     networks:
       - metodos-network
     environment:
@@ -113,6 +129,7 @@ services:
       - SECANTE_SERVICE_URL=http://secante-service:8004
       - JACOBI_SERVICE_URL=http://jacobi-service:8005
       - GAUSS_SEIDEL_SERVICE_URL=http://gauss-seidel-service:8006
+      - TRAPECIO_SERVICE_URL=http://trapecio-service:8007  # Añadir URL del servicio de Trapecio
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
