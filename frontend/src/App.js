@@ -9,7 +9,8 @@ import NewtonRaphson from './components/metodos/NewtonRaphson';
 import Secante from './components/metodos/Secante';
 import Jacobi from './components/metodos/Jacobi';
 import GaussSeidel from './components/metodos/GaussSeidel';
-import Trapecio from './components/metodos/Trapecio'; // Importar el nuevo componente
+import Trapecio from './components/metodos/Trapecio';
+import Simpson from './components/metodos/Simpson'; // Importar el nuevo componente
 import './styles.css';
 
 function App() {
@@ -26,7 +27,8 @@ function App() {
             <Route path="/metodos/secante" element={<Secante />} />
             <Route path="/metodos/jacobi" element={<Jacobi />} />
             <Route path="/metodos/gauss-seidel" element={<GaussSeidel />} />
-            <Route path="/metodos/trapecio" element={<Trapecio />} /> {/* Añadir la ruta */}
+            <Route path="/metodos/trapecio" element={<Trapecio />} />
+            <Route path="/metodos/simpson" element={<Simpson />} /> {/* Añadir la ruta */}
           </Routes>
         </main>
         <Footer />

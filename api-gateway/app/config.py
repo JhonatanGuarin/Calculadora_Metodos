@@ -7,7 +7,8 @@ class Settings(BaseSettings):
     secante_service_url: str
     jacobi_service_url: str
     gauss_seidel_service_url: str
-    trapecio_service_url: str  # Añadir esta línea
+    trapecio_service_url: str
+    simpson_service_url: str  # Añadir esta línea
     # Aquí agregaremos más servicios a medida que los implementemos
 
     class Config:

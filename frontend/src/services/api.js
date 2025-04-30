@@ -92,6 +92,18 @@ export const metodosTrapecio = {
   }
 };
 
+export const metodosSimpson = {
+  integrate: async (data) => {
+    try {
+      const response = await api.post('/metodos/simpson', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error en la solicitud de Simpson:', error);
+      throw error;
+    }
+  }
+};
+
 export const health = {
   check: async () => {
     try {

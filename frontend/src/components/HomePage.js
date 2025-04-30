@@ -52,6 +52,13 @@ const HomePage = () => {
       description: 'Método de integración numérica basado en aproximación lineal',
       icon: '∫',
       available: true
+    },
+    {
+      id: 'simpson',
+      name: 'Simpson',
+      description: 'Método de integración numérica basado en aproximación cuadrática',
+      icon: '∫',
+      available: true
     }
   ];
 
