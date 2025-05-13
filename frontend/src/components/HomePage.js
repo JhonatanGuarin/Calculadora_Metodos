@@ -59,6 +59,13 @@ const HomePage = () => {
       description: 'Método de integración numérica basado en aproximación cuadrática',
       icon: '∫',
       available: true
+    },
+    {
+      id: 'broyden',
+      name: 'Broyden',
+      description: 'Método cuasi-Newton para encontrar raíces de ecuaciones',
+      icon: '🔄',
+      available: true
     }
   ];
 

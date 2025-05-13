@@ -104,6 +104,22 @@ export const metodosSimpson = {
   }
 };
 
+export const metodosBroyden = {
+  solve: async (data) => {
+    try {
+      const response = await api.post('/metodos/broyden', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error en la solicitud de Broyden:', error);
+      throw error;
+    }
+  }
+};
+
+
+
+
+
 export const health = {
   check: async () => {
     try {

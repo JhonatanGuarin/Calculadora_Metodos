@@ -10,7 +10,9 @@ import Secante from './components/metodos/Secante';
 import Jacobi from './components/metodos/Jacobi';
 import GaussSeidel from './components/metodos/GaussSeidel';
 import Trapecio from './components/metodos/Trapecio';
-import Simpson from './components/metodos/Simpson'; // Importar el nuevo componente
+import Simpson from './components/metodos/Simpson'; 
+import Broyden from './components/metodos/Broyden';
+import ParabolicPDE from './components/metodos/ParabolicPDE'; // Importar el nuevo componente
 import './styles.css';
 
 function App() {
@@ -28,7 +30,8 @@ function App() {
             <Route path="/metodos/jacobi" element={<Jacobi />} />
             <Route path="/metodos/gauss-seidel" element={<GaussSeidel />} />
             <Route path="/metodos/trapecio" element={<Trapecio />} />
-            <Route path="/metodos/simpson" element={<Simpson />} /> {/* Añadir la ruta */}
+            <Route path="/metodos/simpson" element={<Simpson />} />
+            <Route path="/metodos/broyden" element={<Broyden />} />
           </Routes>
         </main>
         <Footer />
