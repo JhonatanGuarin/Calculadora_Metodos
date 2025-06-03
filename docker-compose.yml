@@ -136,6 +136,21 @@ services:
       retries: 3
       start_period: 10s
 
+  # Servicio de Romberg
+  romberg-service:
+    build: ./Metodos/romberg-service
+    container_name: romberg-service
+    ports:
+      - "8010:8010" 
+    networks:
+      - metodos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   # API Gateway
   api-gateway:
     build: ./api-gateway
@@ -151,6 +166,7 @@ services:
       - gauss-seidel-service
       - trapecio-service
       - simpson-service
+      - romberg-service
       - broyden-service
     networks:
       - metodos-network
@@ -163,6 +179,7 @@ services:
       - GAUSS_SEIDEL_SERVICE_URL=http://gauss-seidel-service:8006
       - TRAPECIO_SERVICE_URL=http://trapecio-service:8007
       - SIMPSON_SERVICE_URL=http://simpson-service:8008
+      - ROMBERG_SERVICE_URL=http://romberg-service:8010
       - BROYDEN_SERVICE_URL=http://broyden-service:8009
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

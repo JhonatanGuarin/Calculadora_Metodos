@@ -115,7 +115,17 @@ export const metodosBroyden = {
     }
   }
 };
-
+export const metodosRomberg = {
+  integrate: async (data) => {
+    try {
+      const response = await api.post('/metodos/romberg', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error en la solicitud de Romberg:', error);
+      throw error;
+    }
+  }
+};
 
 
 

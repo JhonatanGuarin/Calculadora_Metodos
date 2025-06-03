@@ -61,6 +61,13 @@ const HomePage = () => {
       available: true
     },
     {
+      id: 'romberg',
+      name: 'Romberg',
+      description: 'Método de integración numérica basado en extrapolación de Richardson',
+      icon: '∫',
+      available: true
+    },
+    {
       id: 'broyden',
       name: 'Broyden',
       description: 'Método cuasi-Newton para encontrar raíces de ecuaciones',

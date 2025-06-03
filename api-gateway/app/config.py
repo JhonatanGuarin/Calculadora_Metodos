@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     gauss_seidel_service_url: str
     trapecio_service_url: str
     simpson_service_url: str
+    romberg_service_url: str  # Añadido para el servicio de Romberg
     broyden_service_url: str
 
     class Config:

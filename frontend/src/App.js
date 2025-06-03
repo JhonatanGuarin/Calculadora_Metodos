@@ -11,8 +11,8 @@ import Jacobi from './components/metodos/Jacobi';
 import GaussSeidel from './components/metodos/GaussSeidel';
 import Trapecio from './components/metodos/Trapecio';
 import Simpson from './components/metodos/Simpson'; 
+import Romberg from './components/metodos/Romberg'; // Añadir importación
 import Broyden from './components/metodos/Broyden';
-import ParabolicPDE from './components/metodos/ParabolicPDE'; // Importar el nuevo componente
 import './styles.css';
 
 function App() {
@@ -31,6 +31,7 @@ function App() {
             <Route path="/metodos/gauss-seidel" element={<GaussSeidel />} />
             <Route path="/metodos/trapecio" element={<Trapecio />} />
             <Route path="/metodos/simpson" element={<Simpson />} />
+            <Route path="/metodos/romberg" element={<Romberg />} /> {/* Añadir ruta */}
             <Route path="/metodos/broyden" element={<Broyden />} />
           </Routes>
         </main>
