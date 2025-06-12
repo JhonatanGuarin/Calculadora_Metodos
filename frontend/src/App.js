@@ -13,6 +13,7 @@ import Trapecio from './components/metodos/Trapecio';
 import Simpson from './components/metodos/Simpson'; 
 import Romberg from './components/metodos/Romberg'; // Añadir importación
 import Broyden from './components/metodos/Broyden';
+import Euler from './components/metodos/Euler';
 import './styles.css';
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
             <Route path="/metodos/simpson" element={<Simpson />} />
             <Route path="/metodos/romberg" element={<Romberg />} /> {/* Añadir ruta */}
             <Route path="/metodos/broyden" element={<Broyden />} />
+            <Route path="/metodos/euler" element={<Euler />} />
           </Routes>
         </main>
         <Footer />

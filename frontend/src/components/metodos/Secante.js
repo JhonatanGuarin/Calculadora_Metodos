@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Button, Spinner, Table, Modal } from 'react-bootstrap';
+import { Card, Form, Button, Spinner, Table, Modal, Dropdown, DropdownButton, ButtonGroup } from 'react-bootstrap';
 import { metodosSecante } from '../../services/api';
 import MathKeyboard from '../MathKeyboard';
 import FunctionGraph from '../FunctionGraph';
 import '../../styles/Metodos.css';
 import 'katex/dist/katex.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExclamationTriangle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faExclamationTriangle, faTimes, faDownload, faTable, faFileExcel, faFileCsv } from '@fortawesome/free-solid-svg-icons';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const Secante = () => {
   // Estado para almacenar los datos del formulario
@@ -26,6 +28,19 @@ const Secante = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('input');
   const [showErrorModal, setShowErrorModal] = useState(false);
+  
+  // Estado para el modal de exportación
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState('excel');
+  const [selectedColumns, setSelectedColumns] = useState({
+    iteration: true,
+    x_prev: true,
+    x_curr: true,
+    x_next: true,
+    f_prev: true,
+    f_curr: true,
+    error: true
+  });
   
   // Cargar datos del localStorage al iniciar
   useEffect(() => {
@@ -61,6 +76,17 @@ const Secante = () => {
     { value: 1e-8, label: '10⁻⁸' },
     { value: 1e-9, label: '10⁻⁹' },
     { value: 1e-10, label: '10⁻¹⁰' }
+  ];
+
+  // Definición de columnas disponibles para exportar
+  const availableColumns = [
+    { id: 'iteration', label: 'Iteración', key: 'iteration' },
+    { id: 'x_prev', label: 'x_prev', key: 'x_prev' },
+    { id: 'x_curr', label: 'x_curr', key: 'x_curr' },
+    { id: 'x_next', label: 'x_next', key: 'x_next' },
+    { id: 'f_prev', label: 'f(x_prev)', key: 'f_prev' },
+    { id: 'f_curr', label: 'f(x_curr)', key: 'f_curr' },
+    { id: 'error', label: 'Error', key: 'error' }
   ];
 
   const handleEquationChange = (expr) => {
@@ -157,6 +183,135 @@ const Secante = () => {
     setShowErrorModal(false);
   };
 
+  // Función para abrir el modal de exportación
+  const handleOpenExportModal = () => {
+    setShowExportModal(true);
+  };
+
+  // Función para cerrar el modal de exportación
+  const handleCloseExportModal = () => {
+    setShowExportModal(false);
+  };
+
+  // Función para cambiar el formato de exportación
+  const handleExportFormatChange = (format) => {
+    setExportFormat(format);
+  };
+
+  // Función para cambiar las columnas seleccionadas
+  const handleColumnToggle = (columnId) => {
+    setSelectedColumns(prev => ({
+      ...prev,
+      [columnId]: !prev[columnId]
+    }));
+  };
+
+  // Función para seleccionar todas las columnas
+  const handleSelectAllColumns = () => {
+    const allSelected = {};
+    availableColumns.forEach(col => {
+      allSelected[col.id] = true;
+    });
+    setSelectedColumns(allSelected);
+  };
+
+  // Función para deseleccionar todas las columnas
+  const handleDeselectAllColumns = () => {
+    const noneSelected = {};
+    availableColumns.forEach(col => {
+      noneSelected[col.id] = false;
+    });
+    setSelectedColumns(noneSelected);
+  };
+
+  // Función para exportar los datos
+  const handleExport = () => {
+    if (!result || !result.all_iterations || result.all_iterations.length === 0) {
+      setError("No hay datos para exportar");
+      setShowErrorModal(true);
+      setShowExportModal(false);
+      return;
+    }
+    
+    try {
+      // Filtrar las columnas seleccionadas
+      const selectedColumnsList = availableColumns.filter(col => selectedColumns[col.id]);
+      
+      if (selectedColumnsList.length === 0) {
+        setError("Debe seleccionar al menos una columna para exportar");
+        setShowErrorModal(true);
+        return;
+      }
+      
+      // Crear los encabezados
+      const headers = selectedColumnsList.map(col => col.label);
+      
+      // Crear los datos de las filas
+      const rows = result.all_iterations.map(iter => {
+        return selectedColumnsList.map(col => {
+          const value = iter[col.key];
+          return value !== null && value !== undefined ? Number(value) : 'N/A';
+        });
+      });
+      
+      // Información adicional sobre la raíz encontrada
+      const infoRows = [
+        ['Método de la Secante - Resultados'],
+        ['Ecuación f(x) = 0:', formData.equation],
+        ['Raíz encontrada:', result.root !== null ? Number(result.root) : 'No encontrada'],
+        ['Iteraciones totales:', result.iterations],
+        ['Tolerancia utilizada:', formData.tolerance],
+        ['Primera aproximación x₀:', formData.x0],
+        ['Segunda aproximación x₁:', formData.x1],
+        ['Convergencia:', result.converged ? 'Sí' : 'No'],
+        ['Mensaje:', result.message]
+      ];
+      
+      // Timestamp para el nombre del archivo
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+      
+      if (exportFormat === 'excel') {
+        // Crear una hoja de cálculo con la información general
+        const infoWorksheet = XLSX.utils.aoa_to_sheet(infoRows);
+        
+        // Crear una hoja de cálculo con los datos de las iteraciones
+        const worksheetData = [headers, ...rows];
+        const iterationsWorksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        
+        // Crear un libro de trabajo y añadir las hojas
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, infoWorksheet, 'Información');
+        XLSX.utils.book_append_sheet(workbook, iterationsWorksheet, 'Iteraciones');
+        
+        // Generar el archivo Excel
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        // Descargar el archivo
+        saveAs(data, `secante_${timestamp}.xlsx`);
+      } else if (exportFormat === 'csv') {
+        // Crear los datos CSV
+        let csvContent = headers.join(',') + '\n';
+        
+        // Añadir las filas
+        rows.forEach(row => {
+          csvContent += row.join(',') + '\n';
+        });
+        
+        // Crear el blob y descargar
+        const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        saveAs(csvBlob, `secante_${timestamp}.csv`);
+      }
+      
+      // Cerrar el modal
+      setShowExportModal(false);
+    } catch (err) {
+      console.error("Error al exportar:", err);
+      setError("Error al generar el archivo. Por favor, inténtelo de nuevo.");
+      setShowErrorModal(true);
+    }
+  };
+
   // Función para convertir expresiones evaluables de vuelta a formato LaTeX
   const convertToLatex = (expr) => {
     if (!expr) return '';
@@ -243,6 +398,104 @@ const Secante = () => {
           </p>
           <Button variant="secondary" onClick={handleCloseErrorModal}>
             Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      
+      {/* Modal de Exportación */}
+      <Modal
+        show={showExportModal}
+        onHide={handleCloseExportModal}
+        centered
+        className="export-modal"
+      >
+        <Modal.Header className="export-modal-header">
+          <Modal.Title className="export-modal-title">
+            <FontAwesomeIcon icon={faDownload} className="me-2" />
+            Exportar Resultados
+          </Modal.Title>
+          <Button 
+            variant="link" 
+            className="export-close-btn" 
+            onClick={handleCloseExportModal}
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </Button>
+        </Modal.Header>
+        <Modal.Body className="export-modal-body">
+          <Form>
+            <Form.Group className="mb-4">
+              <Form.Label>Formato de exportación</Form.Label>
+              <div className="d-flex">
+                <Form.Check
+                  type="radio"
+                  id="export-excel"
+                  name="exportFormat"
+                  label="Excel (.xlsx)"
+                  checked={exportFormat === 'excel'}
+                  onChange={() => handleExportFormatChange('excel')}
+                  className="me-4"
+                />
+                <Form.Check
+                  type="radio"
+                  id="export-csv"
+                  name="exportFormat"
+                  label="CSV (.csv)"
+                  checked={exportFormat === 'csv'}
+                  onChange={() => handleExportFormatChange('csv')}
+                />
+              </div>
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <Form.Label>Columnas a incluir</Form.Label>
+                <div>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    onClick={handleSelectAllColumns}
+                    className="p-0 me-2"
+                  >
+                    Seleccionar todo
+                  </Button>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    onClick={handleDeselectAllColumns}
+                    className="p-0"
+                  >
+                    Deseleccionar todo
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="column-selection">
+                {availableColumns.map(column => (
+                  <Form.Check
+                    key={column.id}
+                    type="checkbox"
+                    id={`column-${column.id}`}
+                    label={column.label}
+                    checked={selectedColumns[column.id] || false}
+                    onChange={() => handleColumnToggle(column.id)}
+                    className="mb-2"
+                  />
+                ))}
+              </div>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer className="export-modal-footer">
+          <Button variant="secondary" onClick={handleCloseExportModal}>
+            Cancelar
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handleExport}
+            disabled={Object.values(selectedColumns).every(v => !v)}
+          >
+            Exportar
           </Button>
         </Modal.Footer>
       </Modal>
@@ -373,7 +626,46 @@ const Secante = () => {
                 <p>{result.message || 'No hay mensaje disponible'}</p>
               </div>
               
-              <h4 className="iterations-title">Tabla de Iteraciones</h4>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h4 className="iterations-title mb-0">Tabla de Iteraciones</h4>
+                <DropdownButton
+                  as={ButtonGroup}
+                  title={
+                    <span>
+                      <FontAwesomeIcon icon={faDownload} className="me-2" />
+                      Exportar
+                    </span>
+                  }
+                  variant="outline-primary"
+                  className="export-dropdown"
+                >
+                  <Dropdown.Item onClick={handleOpenExportModal}>
+                    <FontAwesomeIcon icon={faTable} className="me-2" />
+                    Personalizar exportación
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item 
+                    onClick={() => {
+                      setExportFormat('excel');
+                      handleSelectAllColumns();
+                      handleExport();
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faFileExcel} className="me-2" />
+                    Exportar a Excel
+                  </Dropdown.Item>
+                  <Dropdown.Item 
+                    onClick={() => {
+                      setExportFormat('csv');
+                      handleSelectAllColumns();
+                      handleExport();
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faFileCsv} className="me-2" />
+                    Exportar a CSV
+                  </Dropdown.Item>
+                </DropdownButton>
+              </div>
               <div className="table-responsive">
                 <Table striped bordered hover>
                   <thead>

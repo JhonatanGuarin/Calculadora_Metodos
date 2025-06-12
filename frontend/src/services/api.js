@@ -142,4 +142,16 @@ export const health = {
   }
 };
 
+export const metodosEuler = {
+  solve: async (data) => {
+    try {
+      const response = await api.post('/metodos/euler', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error en la solicitud de Euler:', error);
+      throw error;
+    }
+  }
+};
+
 export default api;

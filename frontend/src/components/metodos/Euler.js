@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Spinner, Table, Modal, Dropdown, DropdownButton, ButtonGroup } from 'react-bootstrap';
-import { metodosNewtonRaphson } from '../../services/api';
+import { metodosEuler } from '../../services/api';
 import MathKeyboard from '../MathKeyboard';
 import FunctionGraph from '../FunctionGraph';
 import '../../styles/Metodos.css';
@@ -10,14 +10,19 @@ import { faExclamationTriangle, faTimes, faDownload, faTable, faFileExcel, faFil
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
-const NewtonRaphson = () => {
+const Euler = () => {
   // Estado para almacenar los datos del formulario
   const [formData, setFormData] = useState({
     equation: '',
     x0: 0,
-    tolerance: 1e-6,
-    max_iterations: 100
+    y0: 0,
+    xf: 1,
+    h: 0.1,
+    max_steps: 100
   });
+  
+  // Estado para el valor de h como string (para manejar la entrada de texto)
+  const [hValue, setHValue] = useState("0.1");
   
   // Estado para controlar la visibilidad de los componentes MathKeyboard
   const [mathKeyboardsKey, setMathKeyboardsKey] = useState(0);
@@ -32,25 +37,30 @@ const NewtonRaphson = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState('excel');
   const [selectedColumns, setSelectedColumns] = useState({
-    iteration: true,
+    paso: true,
     x: true,
-    f_x: true,
-    f_prime_x: true,
-    next_x: true,
-    error: true
+    y: true,
+    dy_dx: true
   });
   
   // Cargar datos del localStorage al iniciar
   useEffect(() => {
-    const savedEquation = localStorage.getItem('newtonRaphson_equation');
-    const savedX0 = localStorage.getItem('newtonRaphson_x0');
-    const savedTolerance = localStorage.getItem('newtonRaphson_tolerance');
-    const savedMaxIterations = localStorage.getItem('newtonRaphson_max_iterations');
+    const savedEquation = localStorage.getItem('euler_equation');
+    const savedX0 = localStorage.getItem('euler_x0');
+    const savedY0 = localStorage.getItem('euler_y0');
+    const savedXf = localStorage.getItem('euler_xf');
+    const savedH = localStorage.getItem('euler_h');
+    const savedMaxSteps = localStorage.getItem('euler_max_steps');
     
     if (savedEquation) setFormData(prev => ({ ...prev, equation: savedEquation }));
     if (savedX0) setFormData(prev => ({ ...prev, x0: parseFloat(savedX0) }));
-    if (savedTolerance) setFormData(prev => ({ ...prev, tolerance: parseFloat(savedTolerance) }));
-    if (savedMaxIterations) setFormData(prev => ({ ...prev, max_iterations: parseInt(savedMaxIterations) }));
+    if (savedY0) setFormData(prev => ({ ...prev, y0: parseFloat(savedY0) }));
+    if (savedXf) setFormData(prev => ({ ...prev, xf: parseFloat(savedXf) }));
+    if (savedH) {
+      setHValue(savedH);
+      setFormData(prev => ({ ...prev, h: parseFloat(savedH.replace(',', '.')) }));
+    }
+    if (savedMaxSteps) setFormData(prev => ({ ...prev, max_steps: parseInt(savedMaxSteps) }));
   }, []);
   
   // Efecto para forzar la recreación de los componentes MathKeyboard cuando se cambia a la pestaña de entrada
@@ -61,27 +71,12 @@ const NewtonRaphson = () => {
     }
   }, [activeTab]);
 
-  const toleranceOptions = [
-    { value: 1e-1, label: '10⁻¹' },
-    { value: 1e-2, label: '10⁻²' },
-    { value: 1e-3, label: '10⁻³' },
-    { value: 1e-4, label: '10⁻⁴' },
-    { value: 1e-5, label: '10⁻⁵' },
-    { value: 1e-6, label: '10⁻⁶' },
-    { value: 1e-7, label: '10⁻⁷' },
-    { value: 1e-8, label: '10⁻⁸' },
-    { value: 1e-9, label: '10⁻⁹' },
-    { value: 1e-10, label: '10⁻¹⁰' }
-  ];
-
   // Definición de columnas disponibles para exportar
   const availableColumns = [
-    { id: 'iteration', label: 'Iteración', key: 'iteration' },
-    { id: 'x', label: 'x_i', key: 'x' },
-    { id: 'f_x', label: 'f(x_i)', key: 'f(x)' },
-    { id: 'f_prime_x', label: "f'(x_i)", key: "f'(x)" },
-    { id: 'next_x', label: 'x_i+1', key: 'next_x' },
-    { id: 'error', label: 'Error', key: 'error' }
+    { id: 'paso', label: 'Paso', key: 'paso' },
+    { id: 'x', label: 'x', key: 'x' },
+    { id: 'y', label: 'y', key: 'y' },
+    { id: 'dy_dx', label: 'dy/dx', key: 'dy_dx' }
   ];
 
   const handleEquationChange = (expr) => {
@@ -89,28 +84,58 @@ const NewtonRaphson = () => {
     setFormData({ ...formData, equation: expr });
     
     // Guardar en localStorage
-    localStorage.setItem('newtonRaphson_equation', expr);
+    localStorage.setItem('euler_equation', expr);
     
     // Guardar también el formato original si está disponible
     if (window.lastLatexEquation) {
-      localStorage.setItem('newtonRaphson_equation_latex', window.lastLatexEquation);
+      localStorage.setItem('euler_equation_latex', window.lastLatexEquation);
     }
+  };
+
+  // Manejador específico para el campo h
+  const handleHChange = (e) => {
+    const value = e.target.value;
+    
+    // Guardar el valor como string
+    setHValue(value);
+    
+    // Intentar convertir a número para el formData
+    try {
+      // Reemplazar coma por punto si es necesario
+      const normalizedValue = value.toString().replace(',', '.');
+      const numValue = parseFloat(normalizedValue);
+      
+      if (!isNaN(numValue)) {
+        setFormData(prev => ({ ...prev, h: numValue }));
+      }
+    } catch (err) {
+      console.error("Error al convertir h a número:", err);
+    }
+    
+    // Guardar en localStorage
+    localStorage.setItem('euler_h', value);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    let parsedValue = value;
     
     // Convertir a número para campos numéricos
-    if (['x0', 'tolerance', 'max_iterations'].includes(name)) {
-      parsedValue = name === 'max_iterations' ? parseInt(value, 10) : parseFloat(value);
+    if (['x0', 'y0', 'xf', 'max_steps'].includes(name)) {
+      // Reemplazar coma por punto si es necesario
+      const normalizedValue = value.toString().replace(',', '.');
+      const parsedValue = name === 'max_steps' ? 
+        parseInt(normalizedValue, 10) : 
+        parseFloat(normalizedValue);
+      
+      // Actualizar el estado
+      setFormData(prev => ({ ...prev, [name]: parsedValue }));
+    } else {
+      // Para campos no numéricos
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
     
-    // Actualizar el estado
-    setFormData({ ...formData, [name]: parsedValue });
-    
     // Guardar en localStorage
-    localStorage.setItem(`newtonRaphson_${name}`, value);
+    localStorage.setItem(`euler_${name}`, value);
   };
 
   const handleSubmit = async (e) => {
@@ -122,8 +147,25 @@ const NewtonRaphson = () => {
     setResult(null); // Limpiar resultados previos
     
     try {
-      console.log("Enviando datos:", formData);
-      const response = await metodosNewtonRaphson.solve(formData);
+      // Validar que h sea un número válido
+      const hNumValue = parseFloat(hValue.replace(',', '.'));
+      if (isNaN(hNumValue) || hNumValue <= 0) {
+        throw new Error("El tamaño del paso h debe ser un número positivo");
+      }
+      
+      // Crear una copia del formData para asegurarnos de que los valores son correctos
+      const dataToSend = {
+        ...formData,
+        // Asegurarse de que los valores numéricos son números y no strings
+        x0: parseFloat(formData.x0),
+        y0: parseFloat(formData.y0),
+        xf: parseFloat(formData.xf),
+        h: hNumValue, // Usar el valor convertido de hValue
+        max_steps: parseInt(formData.max_steps)
+      };
+      
+      console.log("Enviando datos:", dataToSend);
+      const response = await metodosEuler.solve(dataToSend);
       console.log("Respuesta recibida:", response);
       
       // Verificar si la respuesta contiene un error
@@ -165,12 +207,6 @@ const NewtonRaphson = () => {
   const safeToFixed = (value, decimals = 10) => {
     if (value === undefined || value === null) return 'N/A';
     return typeof value === 'number' ? value.toFixed(decimals) : 'N/A';
-  };
-
-  // Función auxiliar para formatear en notación científica
-  const safeToExponential = (value, decimals = 6) => {
-    if (value === undefined || value === null) return 'N/A';
-    return typeof value === 'number' ? value.toExponential(decimals) : 'N/A';
   };
 
   // Función para cerrar el modal de error
@@ -221,7 +257,7 @@ const NewtonRaphson = () => {
 
   // Función para exportar los datos
   const handleExport = () => {
-    if (!result || !result.all_iterations || result.all_iterations.length === 0) {
+    if (!result || !result.solucion || result.solucion.length === 0) {
       setError("No hay datos para exportar");
       setShowErrorModal(true);
       setShowExportModal(false);
@@ -242,24 +278,23 @@ const NewtonRaphson = () => {
       const headers = selectedColumnsList.map(col => col.label);
       
       // Crear los datos de las filas
-      const rows = result.all_iterations.map(iter => {
+      const rows = result.solucion.map(paso => {
         return selectedColumnsList.map(col => {
-          const value = iter[col.key];
+          const value = paso[col.key];
           return value !== null && value !== undefined ? Number(value) : 'N/A';
         });
       });
       
-      // Información adicional sobre la raíz encontrada
+      // Información adicional sobre la solución
       const infoRows = [
-        ['Método de Newton-Raphson - Resultados'],
-        ['Ecuación f(x) = 0:', formData.equation],
-        ['Raíz encontrada:', result.root !== null ? Number(result.root) : 'No encontrada'],
-        ['Iteraciones totales:', result.iterations],
-        ['Tolerancia utilizada:', formData.tolerance],
+        ['Método de Euler - Resultados'],
+        ['Ecuación dy/dx = f(x,y):', formData.equation],
         ['Valor inicial x₀:', formData.x0],
-        ['Convergencia:', result.convergence ? 'Sí' : 'No'],
-        ['Error final:', result.error !== null ? Number(result.error) : 'N/A'],
-        ['Mensaje:', result.message]
+        ['Valor inicial y₀:', formData.y0],
+        ['Valor final xf:', formData.xf],
+        ['Tamaño del paso h:', hValue],
+        ['Pasos totales:', result.solucion.length - 1],
+        ['Mensaje:', result.mensaje]
       ];
       
       // Timestamp para el nombre del archivo
@@ -269,21 +304,21 @@ const NewtonRaphson = () => {
         // Crear una hoja de cálculo con la información general
         const infoWorksheet = XLSX.utils.aoa_to_sheet(infoRows);
         
-        // Crear una hoja de cálculo con los datos de las iteraciones
+        // Crear una hoja de cálculo con los datos de los pasos
         const worksheetData = [headers, ...rows];
-        const iterationsWorksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        const stepsWorksheet = XLSX.utils.aoa_to_sheet(worksheetData);
         
         // Crear un libro de trabajo y añadir las hojas
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, infoWorksheet, 'Información');
-        XLSX.utils.book_append_sheet(workbook, iterationsWorksheet, 'Iteraciones');
+        XLSX.utils.book_append_sheet(workbook, stepsWorksheet, 'Pasos');
         
         // Generar el archivo Excel
         const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
         const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         
         // Descargar el archivo
-        saveAs(data, `newton_raphson_${timestamp}.xlsx`);
+        saveAs(data, `euler_${timestamp}.xlsx`);
       } else if (exportFormat === 'csv') {
         // Crear los datos CSV
         let csvContent = headers.join(',') + '\n';
@@ -295,7 +330,7 @@ const NewtonRaphson = () => {
         
         // Crear el blob y descargar
         const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        saveAs(csvBlob, `newton_raphson_${timestamp}.csv`);
+        saveAs(csvBlob, `euler_${timestamp}.csv`);
       }
       
       // Cerrar el modal
@@ -312,7 +347,7 @@ const NewtonRaphson = () => {
     if (!expr) return '';
     
     // Intentar recuperar el LaTeX original del localStorage
-    const equationLatex = localStorage.getItem('newtonRaphson_equation_latex');
+    const equationLatex = localStorage.getItem('euler_equation_latex');
     
     if (expr === formData.equation && equationLatex) {
       return equationLatex;
@@ -340,7 +375,7 @@ const NewtonRaphson = () => {
 
   return (
     <div className="method-container">
-      <h2 className="method-title">Método de Newton-Raphson</h2>
+      <h2 className="method-title">Método de Euler</h2>
       
       <div className="method-tabs">
         <button 
@@ -501,9 +536,9 @@ const NewtonRaphson = () => {
             <Card.Body>
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-4">
-                  <Form.Label>Ecuación f(x) = 0</Form.Label>
+                  <Form.Label>Ecuación diferencial dy/dx = f(x,y)</Form.Label>
                   <div className="equation-info">
-                    <p>Ingrese la ecuación en la forma f(x) = 0. Por ejemplo, para resolver x² - 4 = 0, ingrese x^2 - 4.</p>
+                    <p>Ingrese la ecuación diferencial en la forma dy/dx = f(x,y). Por ejemplo, para resolver dy/dx = x + y, ingrese x + y.</p>
                   </div>
                   {/* Usar key para forzar la recreación del componente */}
                   <MathKeyboard 
@@ -514,7 +549,7 @@ const NewtonRaphson = () => {
                 </Form.Group>
                 
                 <Form.Group className="mb-3">
-                  <Form.Label>Valor inicial (x₀)</Form.Label>
+                  <Form.Label>Valor inicial x₀</Form.Label>
                   <Form.Control
                     type="number"
                     step="any"
@@ -526,27 +561,52 @@ const NewtonRaphson = () => {
                 </Form.Group>
                 
                 <Form.Group className="mb-3">
-                  <Form.Label>Tolerancia</Form.Label>
-                  <Form.Select
-                    name="tolerance"
-                    value={formData.tolerance}
+                  <Form.Label>Valor inicial y₀</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="any"
+                    name="y0"
+                    value={formData.y0}
                     onChange={handleInputChange}
                     required
-                  >
-                    {toleranceOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  />
+                </Form.Group>
+                
+                <Form.Group className="mb-3">
+                  <Form.Label>Valor final xf</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="any"
+                    name="xf"
+                    value={formData.xf}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Form.Group>
+                
+                {/* CAMBIO IMPORTANTE: Usando un input controlado con un estado separado */}
+                <Form.Group className="mb-3">
+                  <Form.Label>Tamaño del paso h</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={hValue}
+                    onChange={handleHChange}
+                    required
+                    pattern="[0-9]*[.,]?[0-9]+"
+                    inputMode="decimal"
+                  />
+                  <Form.Text className="text-muted">
+                    Valores más pequeños de h producen resultados más precisos pero requieren más cálculos.
+                    Use punto o coma como separador decimal (ejemplo: 0.1 o 0,1).
+                  </Form.Text>
                 </Form.Group>
                 
                 <Form.Group className="mb-4">
-                  <Form.Label>Máximo de iteraciones</Form.Label>
+                  <Form.Label>Máximo de pasos</Form.Label>
                   <Form.Control
                     type="number"
-                    name="max_iterations"
-                    value={formData.max_iterations}
+                    name="max_steps"
+                    value={formData.max_steps}
                     onChange={handleInputChange}
                     required
                     min="1"
@@ -579,47 +639,13 @@ const NewtonRaphson = () => {
             <Card.Body>
               <h3 className="results-title">Resultados</h3>
               
-              <div className="result-summary">
-                <div className="result-item">
-                  <h4>Raíz encontrada:</h4>
-                  <p className="result-value">
-                    {result.root !== undefined && result.root !== null 
-                      ? safeToFixed(result.root) 
-                      : 'No encontrada'}
-                  </p>
-                </div>
-                
-                <div className="result-item">
-                  <h4>Iteraciones:</h4>
-                  <p className="result-value">
-                    {result.iterations}
-                  </p>
-                </div>
-                
-                <div className="result-item">
-                  <h4>Convergencia:</h4>
-                  <p className={`result-value ${result.convergence ? 'text-success' : 'text-danger'}`}>
-                    {result.convergence ? 'Sí' : 'No'}
-                  </p>
-                </div>
-                
-                <div className="result-item">
-                  <h4>Error:</h4>
-                  <p className="result-value">
-                    {result.error !== undefined && result.error !== null 
-                      ? safeToExponential(result.error) 
-                      : 'N/A'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="result-message">
+              <div className="result-message mb-4">
                 <h4>Mensaje:</h4>
-                <p>{result.message || 'No hay mensaje disponible'}</p>
+                <p>{result.mensaje || 'No hay mensaje disponible'}</p>
               </div>
               
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h4 className="iterations-title mb-0">Tabla de Iteraciones</h4>
+                <h4 className="iterations-title mb-0">Tabla de Pasos</h4>
                 <DropdownButton
                   as={ButtonGroup}
                   title={
@@ -662,23 +688,19 @@ const NewtonRaphson = () => {
                 <Table striped bordered hover>
                   <thead>
                     <tr>
-                      <th>Iteración</th>
-                      <th>x<sub>i</sub></th>
-                      <th>f(x<sub>i</sub>)</th>
-                      <th>f'(x<sub>i</sub>)</th>
-                      <th>x<sub>i+1</sub></th>
-                      <th>Error</th>
+                      <th>Paso</th>
+                      <th>x</th>
+                      <th>y</th>
+                      <th>dy/dx</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {result.all_iterations && result.all_iterations.map((iter, index) => (
+                    {result.solucion && result.solucion.map((paso, index) => (
                       <tr key={index}>
-                        <td>{iter.iteration}</td>
-                        <td>{safeToFixed(iter.x)}</td>
-                        <td>{safeToFixed(iter["f(x)"])}</td>
-                        <td>{safeToFixed(iter["f'(x)"])}</td>
-                        <td>{safeToFixed(iter.next_x)}</td>
-                        <td>{safeToFixed(iter.error)}</td>
+                        <td>{paso.paso}</td>
+                        <td>{safeToFixed(paso.x)}</td>
+                        <td>{safeToFixed(paso.y)}</td>
+                        <td>{safeToFixed(paso.dy_dx)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -691,14 +713,28 @@ const NewtonRaphson = () => {
         {activeTab === 'graph' && (
           <Card className="graph-card">
             <Card.Body>
-              <h3 className="graph-title">Gráfico de la Función</h3>
-              <FunctionGraph equation={formData.equation} />
-              <div className="graph-legend">
-                <div className="legend-item">
-                  <span className="color-box red"></span>
-                  <span>f(x) = {convertToLatex(formData.equation) || '...'}</span>
-                </div>
+              <h3 className="graph-title">Gráfico de la Solución</h3>
+              <p className="text-muted mb-4">
+                El gráfico muestra la solución numérica de la ecuación diferencial usando el método de Euler.
+                Los puntos representan los valores calculados en cada paso.
+              </p>
+              
+              {/* Aquí podríamos implementar un gráfico específico para EDOs */}
+              {/* Por ahora, usamos el componente FunctionGraph existente */}
+              <div className="text-center py-4">
+                <p>La visualización de soluciones de ecuaciones diferenciales requiere un gráfico especializado.</p>
+                <p>Estamos trabajando en implementar esta funcionalidad.</p>
               </div>
+              
+              {/* Cuando se implemente un gráfico específico para EDOs:
+              <EulerGraph 
+                equation={formData.equation}
+                x0={formData.x0}
+                y0={formData.y0}
+                xf={formData.xf}
+                h={formData.h}
+                solution={result ? result.solucion : null}
+              /> */}
             </Card.Body>
           </Card>
         )}
@@ -708,4 +744,4 @@ const NewtonRaphson = () => {
   );
 };
 
-export default NewtonRaphson;
+export default Euler;

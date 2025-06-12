@@ -9,8 +9,9 @@ class Settings(BaseSettings):
     gauss_seidel_service_url: str
     trapecio_service_url: str
     simpson_service_url: str
-    romberg_service_url: str  # Añadido para el servicio de Romberg
+    romberg_service_url: str
     broyden_service_url: str
+    euler_service_url: str  # Añadido para el servicio de Euler
 
     class Config:
         env_file = ".env"

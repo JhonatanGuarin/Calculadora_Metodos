@@ -139,6 +139,22 @@ const FunctionGraph = ({ equation, showTrapezoids = false, showParabolas = false
   const drawTrapezoidApproximation = (a, b, n, result) => {
     const width = (b - a) / n;
     
+    // Array de colores para los trapecios
+    const colors = [
+      [255, 100, 100], // Rojo claro
+      [100, 255, 100], // Verde claro
+      [100, 100, 255], // Azul claro
+      [255, 255, 100], // Amarillo
+      [255, 100, 255], // Magenta
+      [100, 255, 255], // Cian
+      [255, 150, 100], // Naranja
+      [150, 100, 255], // Púrpura
+      [100, 255, 150], // Verde menta
+      [255, 200, 150], // Durazno
+      [200, 150, 255], // Lavanda
+      [150, 255, 200], // Aqua
+    ];
+    
     // Crear un polígono para cada trapecio
     for (let i = 0; i < n; i++) {
       const x1 = a + i * width;
@@ -176,9 +192,13 @@ const FunctionGraph = ({ equation, showTrapezoids = false, showParabolas = false
       // Crear el polígono (trapecio)
       window.ggbApplet.evalCommand(`trapecio${i} = Polygon(P${i}_1, P${i}_2, P${i}_3, P${i}_4)`);
       
-      // Establecer color y transparencia
-      window.ggbApplet.evalCommand(`SetColor(trapecio${i}, 0, 128, 255, 0.5)`); // Azul semi-transparente
-      window.ggbApplet.evalCommand(`SetFilling(trapecio${i}, 0.3)`); // 30% de opacidad
+      // Seleccionar color basado en el índice del trapecio
+      const colorIndex = i % colors.length;
+      const [r, g, b] = colors[colorIndex];
+      
+      // Establecer color único para cada trapecio
+      window.ggbApplet.evalCommand(`SetColor(trapecio${i}, ${r}, ${g}, ${b})`);
+      window.ggbApplet.evalCommand(`SetFilling(trapecio${i}, 0.4)`); // 40% de opacidad
       
       // Dibujar líneas verticales en cada punto de subdivisión
       if (i > 0 && i < n) {

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Button, Spinner, Table, Modal } from 'react-bootstrap';
+import { Card, Form, Button, Spinner, Table, Modal, Dropdown, DropdownButton, ButtonGroup } from 'react-bootstrap';
 import { metodosTrapecio } from '../../services/api';
 import MathKeyboard from '../MathKeyboard';
 import FunctionGraph from '../FunctionGraph';
 import '../../styles/Metodos.css';
 import 'katex/dist/katex.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExclamationTriangle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faExclamationTriangle, faTimes, faDownload, faTable, faFileExcel, faFileCsv } from '@fortawesome/free-solid-svg-icons';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const Trapecio = () => {
   // Estado para almacenar los datos del formulario
@@ -25,6 +27,16 @@ const Trapecio = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('input');
   const [showErrorModal, setShowErrorModal] = useState(false);
+  
+  // Estado para el modal de exportación
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState('excel');
+  const [selectedColumns, setSelectedColumns] = useState({
+    index: true,
+    x_value: true,
+    y_value: true,
+    area: true
+  });
   
   // Cargar datos del localStorage al iniciar
   useEffect(() => {
@@ -46,6 +58,14 @@ const Trapecio = () => {
       setMathKeyboardsKey(prevKey => prevKey + 1);
     }
   }, [activeTab]);
+
+  // Definición de columnas disponibles para exportar
+  const availableColumns = [
+    { id: 'index', label: 'Subintervalo #', key: 'index' },
+    { id: 'x_value', label: 'Punto x', key: 'x_value' },
+    { id: 'y_value', label: 'Valor f(x)', key: 'y_value' },
+    { id: 'area', label: 'Área del trapecio', key: 'area' }
+  ];
 
   const handleEquationChange = (expr) => {
     // Guardar en el estado
@@ -134,6 +154,134 @@ const Trapecio = () => {
     setShowErrorModal(false);
   };
 
+  // Función para abrir el modal de exportación
+  const handleOpenExportModal = () => {
+    setShowExportModal(true);
+  };
+
+  // Función para cerrar el modal de exportación
+  const handleCloseExportModal = () => {
+    setShowExportModal(false);
+  };
+
+  // Función para cambiar el formato de exportación
+  const handleExportFormatChange = (format) => {
+    setExportFormat(format);
+  };
+
+  // Función para cambiar las columnas seleccionadas
+  const handleColumnToggle = (columnId) => {
+    setSelectedColumns(prev => ({
+      ...prev,
+      [columnId]: !prev[columnId]
+    }));
+  };
+
+  // Función para seleccionar todas las columnas
+  const handleSelectAllColumns = () => {
+    const allSelected = {};
+    availableColumns.forEach(col => {
+      allSelected[col.id] = true;
+    });
+    setSelectedColumns(allSelected);
+  };
+
+  // Función para deseleccionar todas las columnas
+  const handleDeselectAllColumns = () => {
+    const noneSelected = {};
+    availableColumns.forEach(col => {
+      noneSelected[col.id] = false;
+    });
+    setSelectedColumns(noneSelected);
+  };
+
+  // Función para exportar los datos
+  const handleExport = () => {
+    if (!result || !result.subintervals || result.subintervals.length === 0) {
+      setError("No hay datos para exportar");
+      setShowErrorModal(true);
+      setShowExportModal(false);
+      return;
+    }
+    
+    try {
+      // Filtrar las columnas seleccionadas
+      const selectedColumnsList = availableColumns.filter(col => selectedColumns[col.id]);
+      
+      if (selectedColumnsList.length === 0) {
+        setError("Debe seleccionar al menos una columna para exportar");
+        setShowErrorModal(true);
+        return;
+      }
+      
+      // Crear los encabezados
+      const headers = selectedColumnsList.map(col => col.label);
+      
+      // Crear los datos de las filas
+      const rows = result.subintervals.map(subinterval => {
+        return selectedColumnsList.map(col => {
+          const value = subinterval[col.key];
+          return value !== null && value !== undefined ? Number(value) : 'N/A';
+        });
+      });
+      
+      // Información adicional sobre la integral
+      const infoRows = [
+        ['Método del Trapecio - Resultados'],
+        ['Función f(x):', formData.equation],
+        ['Valor de la integral:', result.integral !== null ? Number(result.integral) : 'No calculado'],
+        ['Límite inferior (a):', formData.a],
+        ['Límite superior (b):', formData.b],
+        ['Número de subintervalos (n):', formData.n],
+        ['Estado:', result.success ? 'Exitoso' : 'Fallido'],
+        ['Mensaje:', result.message || 'No hay mensaje disponible']
+      ];
+      
+      // Timestamp para el nombre del archivo
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+      
+      if (exportFormat === 'excel') {
+        // Crear una hoja de cálculo con la información general
+        const infoWorksheet = XLSX.utils.aoa_to_sheet(infoRows);
+        
+        // Crear una hoja de cálculo con los datos de los subintervalos
+        const worksheetData = [headers, ...rows];
+        const subintervalsWorksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        
+        // Crear un libro de trabajo y añadir las hojas
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, infoWorksheet, 'Información');
+        XLSX.utils.book_append_sheet(workbook, subintervalsWorksheet, 'Subintervalos');
+        
+        // Generar el archivo Excel
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        // Descargar el archivo
+        saveAs(data, `trapecio_${timestamp}.xlsx`);
+      } else if (exportFormat === 'csv') {
+        // Crear los datos CSV
+        let csvContent = headers.join(',') + '\n';
+        
+        // Añadir las filas
+        rows.forEach(row => {
+          csvContent += row.join(',') + '\n';
+        });
+        
+        // Crear el blob y descargar
+        const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        saveAs(csvBlob, `trapecio_${timestamp}.csv`);
+      }
+      
+      // Cerrar el modal
+      setShowExportModal(false);
+    } catch (err) {
+      console.error("Error al exportar:", err);
+      setError("Error al generar el archivo. Por favor, inténtelo de nuevo.");
+      setShowErrorModal(true);
+    }
+  };
+
   // Función para convertir expresiones evaluables de vuelta a formato LaTeX
   const convertToLatex = (expr) => {
     if (!expr) return '';
@@ -220,6 +368,104 @@ const Trapecio = () => {
           </p>
           <Button variant="secondary" onClick={handleCloseErrorModal}>
             Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      
+      {/* Modal de Exportación */}
+      <Modal
+        show={showExportModal}
+        onHide={handleCloseExportModal}
+        centered
+        className="export-modal"
+      >
+        <Modal.Header className="export-modal-header">
+          <Modal.Title className="export-modal-title">
+            <FontAwesomeIcon icon={faDownload} className="me-2" />
+            Exportar Resultados
+          </Modal.Title>
+          <Button 
+            variant="link" 
+            className="export-close-btn" 
+            onClick={handleCloseExportModal}
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </Button>
+        </Modal.Header>
+        <Modal.Body className="export-modal-body">
+          <Form>
+            <Form.Group className="mb-4">
+              <Form.Label>Formato de exportación</Form.Label>
+              <div className="d-flex">
+                <Form.Check
+                  type="radio"
+                  id="export-excel"
+                  name="exportFormat"
+                  label="Excel (.xlsx)"
+                  checked={exportFormat === 'excel'}
+                  onChange={() => handleExportFormatChange('excel')}
+                  className="me-4"
+                />
+                <Form.Check
+                  type="radio"
+                  id="export-csv"
+                  name="exportFormat"
+                  label="CSV (.csv)"
+                  checked={exportFormat === 'csv'}
+                  onChange={() => handleExportFormatChange('csv')}
+                />
+              </div>
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <Form.Label>Columnas a incluir</Form.Label>
+                <div>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    onClick={handleSelectAllColumns}
+                    className="p-0 me-2"
+                  >
+                    Seleccionar todo
+                  </Button>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    onClick={handleDeselectAllColumns}
+                    className="p-0"
+                  >
+                    Deseleccionar todo
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="column-selection">
+                {availableColumns.map(column => (
+                  <Form.Check
+                    key={column.id}
+                    type="checkbox"
+                    id={`column-${column.id}`}
+                    label={column.label}
+                    checked={selectedColumns[column.id] || false}
+                    onChange={() => handleColumnToggle(column.id)}
+                    className="mb-2"
+                  />
+                ))}
+              </div>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer className="export-modal-footer">
+          <Button variant="secondary" onClick={handleCloseExportModal}>
+            Cancelar
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handleExport}
+            disabled={Object.values(selectedColumns).every(v => !v)}
+          >
+            Exportar
           </Button>
         </Modal.Footer>
       </Modal>
@@ -343,7 +589,46 @@ const Trapecio = () => {
                 <p>{result.message || 'No hay mensaje disponible'}</p>
               </div>
               
-              <h4 className="iterations-title">Tabla de Subintervalos</h4>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h4 className="iterations-title mb-0">Tabla de Subintervalos</h4>
+                <DropdownButton
+                  as={ButtonGroup}
+                  title={
+                    <span>
+                      <FontAwesomeIcon icon={faDownload} className="me-2" />
+                      Exportar
+                    </span>
+                  }
+                  variant="outline-primary"
+                  className="export-dropdown"
+                >
+                  <Dropdown.Item onClick={handleOpenExportModal}>
+                    <FontAwesomeIcon icon={faTable} className="me-2" />
+                    Personalizar exportación
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item 
+                    onClick={() => {
+                      setExportFormat('excel');
+                      handleSelectAllColumns();
+                      handleExport();
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faFileExcel} className="me-2" />
+                    Exportar a Excel
+                  </Dropdown.Item>
+                  <Dropdown.Item 
+                    onClick={() => {
+                      setExportFormat('csv');
+                      handleSelectAllColumns();
+                      handleExport();
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faFileCsv} className="me-2" />
+                    Exportar a CSV
+                  </Dropdown.Item>
+                </DropdownButton>
+              </div>
               <div className="table-responsive">
                 <Table striped bordered hover>
                   <thead>
@@ -367,13 +652,6 @@ const Trapecio = () => {
                 </Table>
               </div>
               
-              <div className="integration-formula">
-                <h4>Fórmula utilizada:</h4>
-                <p className="formula">
-                  ∫<sub>{formData.a}</sub><sup>{formData.b}</sup> f(x) dx ≈ 
-                  (b-a)/n × [f(x<sub>0</sub>)/2 + f(x<sub>1</sub>) + f(x<sub>2</sub>) + ... + f(x<sub>n-1</sub>) + f(x<sub>n</sub>)/2]
-                </p>
-              </div>
             </Card.Body>
           </Card>
         )}

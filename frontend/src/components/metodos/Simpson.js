@@ -383,16 +383,6 @@ const Simpson = () => {
                 </Table>
               </div>
               
-              <div className="integration-formula">
-                <h4>Fórmula utilizada:</h4>
-                <p className="formula">
-                  ∫<sub>{formData.a}</sub><sup>{formData.b}</sup> f(x) dx ≈ 
-                  (h/3) × [f(x<sub>0</sub>) + 4f(x<sub>1</sub>) + 2f(x<sub>2</sub>) + 4f(x<sub>3</sub>) + ... + 4f(x<sub>n-1</sub>) + f(x<sub>n</sub>)]
-                </p>
-                <p className="formula-note">
-                  Donde h = (b-a)/n y n es par.
-                </p>
-              </div>
             </Card.Body>
           </Card>
         )}

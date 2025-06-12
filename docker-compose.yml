@@ -151,6 +151,21 @@ services:
       retries: 3
       start_period: 10s
 
+  # Servicio de Euler
+  euler-service:
+    build: ./Metodos/euler-service
+    container_name: euler-service
+    ports:
+      - "8012:8012" 
+    networks:
+      - metodos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8012/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   # API Gateway
   api-gateway:
     build: ./api-gateway
@@ -168,6 +183,7 @@ services:
       - simpson-service
       - romberg-service
       - broyden-service
+      - euler-service
     networks:
       - metodos-network
     environment:
@@ -181,6 +197,7 @@ services:
       - SIMPSON_SERVICE_URL=http://simpson-service:8008
       - ROMBERG_SERVICE_URL=http://romberg-service:8010
       - BROYDEN_SERVICE_URL=http://broyden-service:8009
+      - EULER_SERVICE_URL=http://euler-service:8012
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s

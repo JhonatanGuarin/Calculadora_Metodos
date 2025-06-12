@@ -73,6 +73,13 @@ const HomePage = () => {
       description: 'Método cuasi-Newton para encontrar raíces de ecuaciones',
       icon: '🔄',
       available: true
+    },
+    {
+      id: 'euler',
+      name: 'Euler',
+      description: 'Método numérico para resolver ecuaciones diferenciales ordinarias',
+      icon: '📊',
+      available: true
     }
   ];
 

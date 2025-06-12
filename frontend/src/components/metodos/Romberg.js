@@ -389,20 +389,6 @@ const Romberg = () => {
               
               <h4 className="iterations-title">Tabla de Romberg</h4>
               {renderRombergTable()}
-              
-              <div className="integration-formula">
-                <h4>Método utilizado:</h4>
-                <p className="formula-description">
-                  El método de Romberg utiliza extrapolación de Richardson para mejorar la precisión de la regla del trapecio. 
-                  Genera una tabla triangular donde cada elemento R(i,j) representa una aproximación mejorada de la integral.
-                </p>
-                <p className="formula">
-                  R(i,j) = R(i,j-1) + (R(i,j-1) - R(i-1,j-1))/(4<sup>j</sup> - 1)
-                </p>
-                <p className="formula-note">
-                  Donde R(i,0) es la regla del trapecio con 2<sup>i</sup> subintervalos.
-                </p>
-              </div>
             </Card.Body>
           </Card>
         )}
